@@ -163,4 +163,36 @@ style.textContent = `
         }
     }
 `;
+
+style.textContent += `
+    .notification-container {
+        position: absolute;
+        top: 15%; /* Default: Centered between the question and top */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        text-align: center;
+        pointer-events: none;
+        z-index: 100;
+    }
+
+    @media (max-width: 768px) {
+        .notification-container {
+            top: auto; /* Reset top */
+            bottom: 10px; /* Positioned below the input field */
+            transform: translate(-50%, 0); /* No vertical adjustment */
+        }
+    }
+
+    @keyframes moveUp {
+        0% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.8);
+        }
+    }
+`;
 document.head.appendChild(style);
