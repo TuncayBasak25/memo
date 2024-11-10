@@ -1,5 +1,5 @@
-//const socket = new Socket("ws://localhost:8080");
-const socket = new Socket("wss://basak-memo-api-8ed79b1768fd.herokuapp.com");
+const socket = new Socket("ws://localhost:8080");
+//const socket = new Socket("wss://basak-memo-api-8ed79b1768fd.herokuapp.com");
 
 function dispatchKeyEventFromKeyCode(keyCode) {
     const event = new KeyboardEvent('keydown', {
