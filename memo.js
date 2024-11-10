@@ -9,10 +9,10 @@ let opponentScore = 0;
 
 // Create HTML elements dynamically
 const body = document.body;
+const notificationContainer = document.createElement("div"); // Container for notifications
 const questionElement = document.createElement("p");
 const scoreElement = document.createElement("p");
 const answerInput = document.createElement("input");
-const notificationContainer = document.createElement("div"); // Container for notifications
 
 body.style.margin = "0";
 body.style.display = "flex";
@@ -23,23 +23,22 @@ body.style.flexDirection = "column";
 body.style.fontFamily = "Arial, sans-serif";
 body.style.backgroundColor = "#f4f4f4";
 
+// Notification container
+notificationContainer.style.width = "100%";
+notificationContainer.style.textAlign = "center";
+notificationContainer.style.marginBottom = "10px"; // Space between notification and question
+
 questionElement.style.fontSize = "1.5rem";
+questionElement.style.marginTop = "10px"; // Space for a clean layout
 scoreElement.style.fontSize = "1.2rem";
+scoreElement.style.margin = "20px 0";
 
 answerInput.type = "text";
 answerInput.placeholder = "Entrez votre réponse...";
 answerInput.style.fontSize = "1.2rem";
 answerInput.style.margin = "10px";
 
-// Notification container at the top
-notificationContainer.style.position = "absolute";
-notificationContainer.style.top = "10px";
-notificationContainer.style.width = "100%";
-notificationContainer.style.display = "flex";
-notificationContainer.style.flexDirection = "column";
-notificationContainer.style.alignItems = "center";
-notificationContainer.style.pointerEvents = "none"; // Prevent interaction
-
+// Append elements to the body
 body.appendChild(notificationContainer);
 body.appendChild(questionElement);
 body.appendChild(scoreElement);
@@ -108,7 +107,7 @@ function createNotification(message, type) {
     notificationElement.style.transform = "translateY(0)";
     notificationElement.style.animation = "moveUp 2s ease-in-out forwards";
 
-    // Append the notification to the container
+    // Append to the notification container
     notificationContainer.appendChild(notificationElement);
 
     // Remove the notification after animation ends
