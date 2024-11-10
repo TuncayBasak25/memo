@@ -1,4 +1,4 @@
-const socket = new Socket("wss://basak-memo-api-8ed79b1768fd.herokuapp.com");
+const socket = new Socket("ws://localhost:8080");
 
 socket.webSocket.addEventListener("open", () => startGame());
 
@@ -27,9 +27,11 @@ body.style.padding = "10px";
 body.style.boxSizing = "border-box";
 body.style.overflow = "hidden";
 
-// Notification container styled for absolute positioning
+// Notification container styled for centering between question and top
 notificationContainer.style.position = "absolute";
-notificationContainer.style.top = "10px";
+notificationContainer.style.top = "15%"; // Place it closer to the top but above the question
+notificationContainer.style.left = "50%";
+notificationContainer.style.transform = "translateX(-50%)";
 notificationContainer.style.width = "100%";
 notificationContainer.style.textAlign = "center";
 notificationContainer.style.pointerEvents = "none"; // Prevent interaction
@@ -60,6 +62,7 @@ answerInput.style.boxSizing = "border-box";
 answerInput.style.border = "1px solid #ccc";
 answerInput.style.borderRadius = "5px";
 
+// Append elements to the body
 body.appendChild(notificationContainer);
 body.appendChild(gameContainer);
 gameContainer.appendChild(questionElement);
