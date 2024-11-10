@@ -1,5 +1,5 @@
-const socket = new Socket("ws://localhost:8080");
-//const socket = new Socket("wss://basak-memo-api-8ed79b1768fd.herokuapp.com");
+// const socket = new Socket("ws://localhost:8080");
+const socket = new Socket("wss://basak-memo-api-8ed79b1768fd.herokuapp.com");
 
 function dispatchKeyEventFromKeyCode(keyCode) {
     const event = new KeyboardEvent('keydown', {
@@ -20,7 +20,7 @@ socket.actions.keydown = (socket, key) => {
         submitAnswer();
         return;
     }
-    document.getElementById("answerInput").textContent += String.fromCharCode(key);
+    document.getElementById("answerInput").value += String.fromCharCode(key);
 }
 
 document.addEventListener("keydown", ({which}) => {
