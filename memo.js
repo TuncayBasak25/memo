@@ -1,62 +1,134 @@
-Socket.actions.submitAnswer = (socket: Socket, body: { answer?: string }) => {
-    const game = games.find(
-        g => g.player1.id === socket.id || g.player2.id === socket.id
-    );
+const socket = new Socket("ws://localhost:8080");
 
-    if (!game) {
-        return socket.sendError('You are not in an active game.');
-    }
+socket.webSocket.addEventListener("open", () => startGame());
 
-    const { player1, player2 } = game;
-    const player = player1.id === socket.id ? player1 : player2;
-    const opponent = player1.id === socket.id ? player2 : player1;
+let myName = "";
+let opponentName = "";
+let myScore = 0;
+let opponentScore = 0;
 
-    const { answer } = body;
-    if (!answer) {
-        return socket.sendError('Answer is required.');
-    }
+// Create HTML elements dynamically
+const body = document.body;
+const questionElement = document.createElement("p");
+const scoreElement = document.createElement("p");
+const answerInput = document.createElement("input");
+const notificationContainer = document.createElement("div"); // Container for notifications
 
-    const correctIndex = game.currentQuestionIndex;
-    const correctWord = words[correctIndex];
-    const isCorrect =
-        parseInt(answer) === correctIndex || answer.toLowerCase() === correctWord.toLowerCase();
+body.style.margin = "0";
+body.style.display = "flex";
+body.style.justifyContent = "center";
+body.style.alignItems = "center";
+body.style.height = "100vh";
+body.style.flexDirection = "column";
+body.style.fontFamily = "Arial, sans-serif";
+body.style.backgroundColor = "#f4f4f4";
 
-    const currentTime = Date.now();
-    const responseTime = (currentTime - (player.startTime || 0)) / 1000; // Response time in seconds
+questionElement.style.fontSize = "1.5rem";
+scoreElement.style.fontSize = "1.2rem";
 
-    if (isCorrect) {
-        let points = 1;
-        if (responseTime <= 3) points = 10;
-        else if (responseTime <= 10) points = 10 - Math.floor(responseTime - 3);
+answerInput.type = "text";
+answerInput.placeholder = "Entrez votre réponse...";
+answerInput.style.fontSize = "1.2rem";
+answerInput.style.margin = "10px";
 
-        player.score += points;
+// Notification container at the top
+notificationContainer.style.position = "absolute";
+notificationContainer.style.top = "10px";
+notificationContainer.style.width = "100%";
+notificationContainer.style.display = "flex";
+notificationContainer.style.flexDirection = "column";
+notificationContainer.style.alignItems = "center";
+notificationContainer.style.pointerEvents = "none"; // Prevent interaction
 
-        player.socket.sendAction('updateScore', { score: player.score });
-        opponent.socket.sendAction('updateScore', { score: opponent.score });
+body.appendChild(notificationContainer);
+body.appendChild(questionElement);
+body.appendChild(scoreElement);
+body.appendChild(answerInput);
 
-        player.socket.sendAction('notification', {
-            message: `Correct! You gain ${points} points.`,
-        });
-        opponent.socket.sendAction('notification', {
-            message: `${player.name} answered correctly!`,
-            type: 'opponentSuccess',
-        });
+function startGame() {
+    myName = prompt("Entrez votre nom :");
+    socket.sendAction("register", { name: myName });
+    questionElement.innerHTML = "En attente d'un autre joueur...";
+}
 
-        player.startTime = undefined;
-    } else {
-        player.score -= 10;
+socket.actions.updateQuestion = (socket, body) => {
+    const { prompt, opponentName: oppName, score, opponentScore: oppScore } = body;
+    opponentName = oppName || "Adversaire";
+    myScore = score;
+    opponentScore = oppScore;
 
-        player.socket.sendAction('updateScore', { score: player.score });
-        opponent.socket.sendAction('updateScore', { score: opponent.score });
-
-        player.socket.sendAction('notification', {
-            message: `Wrong! You lose 10 points.`,
-        });
-        opponent.socket.sendAction('notification', {
-            message: `${player.name} answered incorrectly.`,
-            type: 'opponentFailure',
-        });
-    }
-
-    askNextQuestion(game);
+    questionElement.innerHTML = prompt;
+    scoreElement.innerHTML = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
+    answerInput.focus();
 };
+
+socket.actions.updateScore = (socket, body) => {
+    const { score } = body;
+    const oldScore = myScore;
+    myScore = score;
+    scoreElement.innerHTML = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
+
+    if (myScore > oldScore) {
+        createNotification("Bravo ! Vous avez bien répondu !", "success");
+    } else if (myScore < oldScore) {
+        createNotification("Oups ! Mauvaise réponse !", "failure");
+    }
+};
+
+socket.actions.notification = (socket, body) => {
+    const { message, type } = body;
+
+    if (type === "opponentSuccess") {
+        createNotification(`${opponentName} a bien répondu !`, "success");
+    } else if (type === "opponentFailure") {
+        createNotification(`${opponentName} s'est trompé !`, "failure");
+    }
+};
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        const answer = answerInput.value.trim();
+        if (answer) {
+            socket.sendAction("submitAnswer", { answer });
+            answerInput.value = "";
+        }
+    }
+});
+
+function createNotification(message, type) {
+    // Create a notification element
+    const notificationElement = document.createElement("p");
+    notificationElement.innerHTML = message;
+    notificationElement.style.position = "relative";
+    notificationElement.style.fontSize = "1.2rem";
+    notificationElement.style.fontWeight = "bold";
+    notificationElement.style.color = type === "success" ? "green" : "red";
+    notificationElement.style.margin = "5px 0";
+    notificationElement.style.opacity = "1";
+    notificationElement.style.transform = "translateY(0)";
+    notificationElement.style.animation = "moveUp 2s ease-in-out forwards";
+
+    // Append the notification to the container
+    notificationContainer.appendChild(notificationElement);
+
+    // Remove the notification after animation ends
+    setTimeout(() => {
+        notificationElement.remove();
+    }, 2000);
+}
+
+// Add CSS for animations
+const style = document.createElement("style");
+style.textContent = `
+    @keyframes moveUp {
+        0% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.8);
+        }
+    }
+`;
+document.head.appendChild(style);
