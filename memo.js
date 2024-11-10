@@ -8,7 +8,7 @@ s.backgroundColor = "magenta";
 s.width = "200px";
 s.height = "200px";
 
-const socket = new Socket("wss://localhost:8080");
+const socket = new Socket("ws://localhost:8080");
 
 let x = 0;
 let y = 0;
@@ -37,7 +37,7 @@ document.addEventListener("keydown", ({which}) => {
     if (![37, 38, 39, 40].includes(which)) return;
 
     socket.sendAction("keypress", which);
-})
+}) 
 
 document.addEventListener("keyup", ({which}) => {
     if (![37, 38, 39, 40].includes(which)) return;
