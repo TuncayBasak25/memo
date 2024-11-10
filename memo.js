@@ -126,13 +126,13 @@ function createNotification(message, type) {
     const notificationElement = document.createElement("p");
     notificationElement.innerHTML = message;
     notificationElement.style.position = "relative";
-    notificationElement.style.fontSize = "clamp(0.8rem, 1.5vw, 1.2rem)";
+    notificationElement.style.fontSize = "clamp(2rem, 4vw, 3rem)";
     notificationElement.style.fontWeight = "bold";
     notificationElement.style.color = type === "success" ? "green" : "red";
-    notificationElement.style.margin = "5px 0";
+    notificationElement.style.margin = "10px 0";
     notificationElement.style.opacity = "1";
     notificationElement.style.transform = "translateY(0)";
-    notificationElement.style.animation = "moveUp 2s ease-in-out forwards";
+    notificationElement.style.animation = "moveUp 4s ease-in-out forwards";
 
     // Append to the notification container
     notificationContainer.appendChild(notificationElement);
