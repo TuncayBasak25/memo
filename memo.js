@@ -19,6 +19,9 @@ socket.actions.keydown = (socket, key) => {
     dispatchKeyEventFromKeyCode(key);
 }
 
+let last = 0;
 document.addEventListener("keydown", ({which}) => {
+    if (Date.now() - last < 50) return;
+    last = Date.now();
     socket.sendAction("keydown", which);
 });
