@@ -44,8 +44,6 @@
     <div class="container">
         <p id="question">Select a difficulty to begin</p>
         <select id="difficulty">
-            <option value="normal">Normal</option>
-            <option value="challenge">Challenge Mode</option>
             <option value="multiplayer">Multiplayer</option>
         </select>
         <button onclick="startGame()" id="startButton">Start</button>
@@ -56,21 +54,13 @@
     </div>
     <script>
         const socket = new Socket("ws://localhost:8080");
-        //const socket = new Socket("wss://basak-memo-api-8ed79b1768fd.herokuapp.com");
-
-        let isMultiplayer = false;
         let isMyTurn = false;
-        let playerName = "";
-
-        socket.actions.startGame = (socket, body) => {
-            const { opponent, gameState } = body;
-            isMyTurn = gameState.currentPlayer === playerName;
-            document.getElementById("question").innerText = `Your opponent is ${opponent}. It's ${isMyTurn ? "your" : opponent + "'s"} turn.`;
-        };
 
         socket.actions.updateGame = (socket, body) => {
-            isMyTurn = body.gameState.currentPlayer === playerName;
-            document.getElementById("question").innerText = `It's ${isMyTurn ? "your" : body.gameState.currentPlayer + "'s"} turn.`;
+            const { question, score, opponentScore, turn } = body;
+            isMyTurn = body.turn % 2 === 0; // Update turn
+            document.getElementById("question").textContent = question;
+            document.getElementById("score").textContent = `Score: ${score} | Opponent: ${opponentScore}`;
         };
 
         socket.actions.endGame = (socket, body) => {
@@ -79,20 +69,13 @@
         };
 
         function startGame() {
-            const difficulty = document.getElementById("difficulty").value;
-            if (difficulty === "multiplayer") {
-                isMultiplayer = true;
-                playerName = prompt("Enter your name:");
-                socket.sendAction("register", { name: playerName });
-                document.getElementById("question").innerText = "Waiting for another player...";
-            } else {
-                isMultiplayer = false;
-                document.getElementById("question").innerText = "Single-player mode starting!";
-            }
+            const playerName = prompt("Enter your name:");
+            socket.sendAction("register", { name: playerName });
+            document.getElementById("question").textContent = "Waiting for another player...";
         }
 
         function handleKeyPress(event) {
-            if (event.key === "Enter" && isMultiplayer && isMyTurn) {
+            if (event.key === "Enter" && isMyTurn) {
                 const answer = document.getElementById("answerInput").value.trim();
                 document.getElementById("answerInput").value = "";
                 socket.sendAction("submitAnswer", { answer });
@@ -100,8 +83,8 @@
         }
 
         function resetGame() {
-            isMultiplayer = false;
-            document.getElementById("question").innerText = "Select a difficulty to begin";
+            document.getElementById("question").textContent = "Game Over!";
+            document.getElementById("answerInput").style.display = "none";
         }
     </script>
 </body>
