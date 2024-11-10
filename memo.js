@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+function game() {
     // Initialize WebSocket connection
     const socket = new Socket("ws://localhost:8080");
 
@@ -86,8 +86,14 @@ document.addEventListener("DOMContentLoaded", () => {
         notificationElement.textContent = "";
 
         // Enable or disable input and button based on turn
-        answerInput.disabled = !isMyTurn;
-        submitButton.disabled = !isMyTurn;
+        if (isMyTurn) {
+            answerInput.disabled = false;
+            submitButton.disabled = false;
+            answerInput.focus(); // Explicitly set focus to the input
+        } else {
+            answerInput.disabled = true;
+            submitButton.disabled = true;
+        }
     };
 
     socket.actions.notification = (socket, body) => {
@@ -127,4 +133,4 @@ document.addEventListener("DOMContentLoaded", () => {
         socket.sendAction("submitAnswer", { answer });
         answerInput.value = "";
     });
-});
+}
