@@ -4,7 +4,7 @@ function game() {
 
     // Wait for WebSocket connection to open before starting the game
     socket.webSocket.addEventListener("open", () => {
-        console.log("WebSocket connection established.");
+        console.log("Connexion WebSocket établie.");
         startGame();
     });
 
@@ -29,7 +29,6 @@ function game() {
     const questionElement = document.createElement("p");
     const scoreElement = document.createElement("p");
     const answerInput = document.createElement("input");
-    const submitButton = document.createElement("button");
     const notificationElement = document.createElement("p");
 
     questionElement.style.fontSize = "1.5rem";
@@ -37,32 +36,30 @@ function game() {
     notificationElement.style.fontSize = "1.2rem";
 
     answerInput.type = "text";
-    answerInput.placeholder = "Enter your answer...";
+    answerInput.placeholder = "Entrez votre réponse...";
     answerInput.style.fontSize = "1.2rem";
     answerInput.style.margin = "10px";
-
-    submitButton.textContent = "Submit";
-    submitButton.style.fontSize = "1.2rem";
-    submitButton.style.padding = "10px 20px";
 
     // Add components to the body
     body.appendChild(questionElement);
     body.appendChild(scoreElement);
     body.appendChild(answerInput);
-    body.appendChild(submitButton);
     body.appendChild(notificationElement);
+
+    // Ensure input is always writable
+    answerInput.removeAttribute("disabled");
 
     // Prompt player to enter their name
     function startGame() {
-        myName = prompt("Enter your name:");
+        myName = prompt("Entrez votre nom :");
         if (!myName) {
-            alert("Name is required to start the game.");
+            alert("Un nom est requis pour commencer la partie.");
             return startGame();
         }
 
         // Register the player with the server
         socket.sendAction("register", { name: myName });
-        questionElement.textContent = "Waiting for another player...";
+        questionElement.textContent = "En attente d'un autre joueur...";
         scoreElement.textContent = "";
         notificationElement.textContent = "";
     }
@@ -71,25 +68,20 @@ function game() {
     socket.actions.updateQuestion = (socket, body) => {
         const { prompt, score, opponentScore: oppScore, playerName, opponentName: oppName } = body;
 
-        opponentName = oppName;
-        myScore = score;
-        opponentScore = oppScore;
+        opponentName = oppName || "Adversaire";
+        myScore = score || 0;
+        opponentScore = oppScore || 0;
 
         questionElement.textContent = prompt;
         scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
         notificationElement.textContent = "";
-
-        // Remove the disabled attribute from input and button
-        answerInput.removeAttribute("disabled");
-        submitButton.removeAttribute("disabled");
-        answerInput.focus(); // Focus the input field
     };
 
     socket.actions.notification = (socket, body) => {
         const { message, score, opponentScore: oppScore } = body;
 
-        myScore = score;
-        opponentScore = oppScore;
+        myScore = score || 0;
+        opponentScore = oppScore || 0;
 
         scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
         notificationElement.textContent = message;
@@ -98,29 +90,31 @@ function game() {
     socket.actions.endGame = (socket, body) => {
         const { message, finalScore, opponentScore: oppScore } = body;
 
-        myScore = finalScore;
-        opponentScore = oppScore;
+        myScore = finalScore || 0;
+        opponentScore = oppScore || 0;
 
         questionElement.textContent = message;
         scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
-        notificationElement.textContent = "Game Over!";
-
-        // Disable input and button by adding the attribute back
-        answerInput.setAttribute("disabled", "true");
-        submitButton.setAttribute("disabled", "true");
+        notificationElement.textContent = "Partie terminée !";
     };
 
-    // Handle submit button click
-    submitButton.addEventListener("click", () => {
-        const answer = answerInput.value.trim();
-        if (!answer) {
-            notificationElement.textContent = "Please enter an answer.";
-            return;
-        }
+    // Handle keydown events for automatic input and submission
+    document.addEventListener("keydown", (event) => {
+        // Ignore system keys
+        if (event.key === "Enter") {
+            // Submit answer
+            const answer = answerInput.value.trim();
+            if (!answer) {
+                notificationElement.textContent = "Veuillez entrer une réponse.";
+                return;
+            }
 
-        // Send the answer to the server
-        socket.sendAction("submitAnswer", { answer });
-        answerInput.value = "";
+            socket.sendAction("submitAnswer", { answer });
+            answerInput.value = "";
+        } else if (event.key.length === 1) {
+            // Write directly into the input
+            answerInput.value += event.key;
+        }
     });
 }
 
