@@ -9,6 +9,7 @@ s.backgroundColor = "magenta";
 s.width = "200px";
 s.height = "200px";
 
+//const socket = new Socket("ws://localhost:8080");
 const socket = new Socket("ws://localhost:8080");
 
 let x = 0;
@@ -18,7 +19,7 @@ function loop() {
     if (socket.data.get("left")) {
         x -= 5;
     }
-    if (socket.data.get("rigth")) {
+    if (socket.data.get("right")) {
         x += 5;
     }
     if (socket.data.get("up")) {
