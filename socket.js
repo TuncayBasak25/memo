@@ -33,7 +33,9 @@ class Socket {
                 this.sendSet(get, value);
             }
         }
-        if (set && typeof (set.key == "string" || typeof set.key == "number")) {
+        if (set && (typeof set.key == "string" || typeof set.key == "number")) {
+            console.log(set);
+            
             this.data.set(set.key, set.value);
         }
     }
