@@ -4,90 +4,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Multiplayer Memory Game</title>
-    <style>
-        body,
-        html {
-            height: 100%;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            background-color: grey;
-        }
-
-        .container {
-            text-align: center;
-            font-size: 2rem;
-        }
-
-        input,
-        button,
-        select {
-            font-size: 1.5rem;
-            padding: 10px;
-            margin: 10px;
-        }
-
-        #question,
-        #output,
-        #score {
-            font-size: 2rem;
-            margin-top: 20px;
-        }
-    </style>
+    <title>Memo Game</title>
     <script src="./socket.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <p id="question">Select a difficulty to begin</p>
-        <select id="difficulty">
-            <option value="multiplayer">Multiplayer</option>
-        </select>
-        <button onclick="startGame()" id="startButton">Start</button>
-        <p id="output"></p>
-        <p id="score">Score: 0</p>
-        <input type="text" id="answerInput" placeholder="Your answer" style="display: none"
-            onkeydown="handleKeyPress(event)" />
-    </div>
-    <script>
-        const socket = new Socket("ws://localhost:8080");
-        let isMyTurn = false;
-
-        socket.actions.updateGame = (socket, body) => {
-            const { question, isMyTurn: turn, score, opponentScore } = body;
-            isMyTurn = turn;
-            document.getElementById("question").textContent = question;
-            document.getElementById("score").textContent = `Score: ${score} | Opponent: ${opponentScore}`;
-            document.getElementById("answerInput").style.display = isMyTurn ? "block" : "none";
-        };
-
-        socket.actions.endGame = (socket, body) => {
-            alert(body.message);
-            resetGame();
-        };
-
-        function startGame() {
-            const playerName = prompt("Enter your name:");
-            socket.sendAction("register", { name: playerName });
-            document.getElementById("question").textContent = "Waiting for another player...";
-        }
-
-        function handleKeyPress(event) {
-            if (event.key === "Enter" && isMyTurn) {
-                const answer = document.getElementById("answerInput").value.trim();
-                document.getElementById("answerInput").value = "";
-                socket.sendAction("submitAnswer", { answer });
-            }
-        }
-
-        function resetGame() {
-            document.getElementById("question").textContent = "Game Over!";
-            document.getElementById("answerInput").style.display = "none";
-        }
-    </script>
+    <script src="./memo.js"></script>
 </body>
 
 </html>
