@@ -16,7 +16,7 @@ function dispatchKeyEventFromKeyCode(keyCode) {
 
 
 socket.actions.keydown = (socket, key) => {
-    simulateTyping(key);
+    dispatchKeyEventFromKeyCode(key);
 }
 
 document.addEventListener("keydown", ({which}) => {
