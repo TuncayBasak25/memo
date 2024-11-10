@@ -43,6 +43,7 @@
             color: red;
         }
     </style>
+    <script src="./socket.js"></script>
 </head>
 
 <body>
@@ -62,99 +63,7 @@
         <p id="correctAnswer"></p>
         <p id="score">Score: 0</p>
     </div>
-
-<script>
-    let socket;
-    let gameStarted = false;
-    let currentState = null;
-
-    function connectWebSocket() {
-        const serverUrl = "ws://localhost:8080"; // Replace with your WebSocket server URL
-        socket = new WebSocket(serverUrl);
-
-        socket.onopen = () => {
-            console.log("Connected to WebSocket server.");
-        };
-
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-
-            // Handle incoming state updates or queries
-            if (data.state) {
-                updateGameState(data.state);
-            } else if (data.query === "name") {
-                respondToNameQuery();
-            } else {
-                console.warn("Unknown message format:", data);
-            }
-        };
-
-        socket.onerror = (error) => {
-            console.error("WebSocket error:", error);
-        };
-
-        socket.onclose = () => {
-            console.log("Disconnected from the WebSocket server.");
-        };
-    }
-
-    function respondToNameQuery() {
-        const playerName = prompt("Enter your name:");
-        socket.send(JSON.stringify({ set: { key: "name", value: playerName } }));
-    }
-
-    function updateGameState(state) {
-        currentState = state;
-
-        // Display scores
-        const scores = Object.entries(state.scores || {})
-            .map(([name, score]) => `${name}: ${score}`)
-            .join(", ");
-        document.getElementById("score").textContent = `Scores: ${scores}`;
-
-        // Show the current question
-        if (state.word) {
-            document.getElementById("question").textContent = `What's the number for "${state.word}"?`;
-        } else if (state.number !== undefined) {
-            document.getElementById("question").textContent = `What's the word for number ${state.number}?`;
-        }
-
-        document.getElementById("output").textContent = "";
-        document.getElementById("correctAnswer").textContent = "";
-    }
-
-    function submitAnswer() {
-        const answer = document.getElementById("answerInput").value.trim();
-
-        if (!answer || !gameStarted) return;
-
-        let payload;
-
-        if (currentState.word) {
-            // If the question is about the word's corresponding number
-            payload = { set: { key: "number", value: parseInt(answer) } };
-        } else if (currentState.number !== undefined) {
-            // If the question is about the number's corresponding word
-            payload = { set: { key: "word", value: answer } };
-        } else {
-            document.getElementById("output").textContent = "Incorrect!";
-            return;
-        }
-
-        // Send the answer to the server
-        socket.send(JSON.stringify(payload));
-        document.getElementById("answerInput").value = "";
-    }
-
-    function handleKeyPress(event) {
-        if (event.key === "Enter") {
-            submitAnswer();
-        }
-    }
-
-    document.addEventListener("DOMContentLoaded", connectWebSocket);
-</script>
-
+    <script src="./memo.js"></script>
 </body>
 
 </html>
