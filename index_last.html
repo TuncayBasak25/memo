@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memo Game</title>
+    <style>
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: grey;
+        }
+
+        .container {
+            text-align: center;
+            font-size: 2rem;
+        }
+
+        input,
+        button,
+        select {
+            font-size: 1.5rem;
+            padding: 10px;
+            margin: 10px;
+        }
+
+        #question,
+        #output,
+        #correctAnswer,
+        #score,
+        #timer {
+            font-size: 2rem;
+            margin-top: 20px;
+        }
+
+        #correctAnswer {
+            color: red;
+        }
+    </style>
+    <script src="./socket.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <p id="question">
+            Select difficulty and click "Start" to begin the game
+        </p>
+        <select id="difficulty">
+            <option value="normal">Normal</option>
+            <option value="challenge">Challenge Mode</option>
+        </select>
+        <button onclick="startGame()" id="startButton">Start</button>
+        <p id="timer">Time: 10</p>
+        <input type="text" id="answerInput" placeholder="Your answer" style="display: none"
+            onkeydown="handleKeyPress(event)" />
+        <p id="output"></p>
+        <p id="correctAnswer"></p>
+        <p id="score">Score: 0</p>
+    </div>
+    <script src="./memo.js"></script>
+</body>
+
+</html>
