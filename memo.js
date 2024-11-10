@@ -9,7 +9,6 @@ function game() {
     });
 
     // Game state
-    let isMyTurn = false;
     let myName = "";
     let opponentName = "";
     let myScore = 0;
@@ -53,10 +52,6 @@ function game() {
     body.appendChild(submitButton);
     body.appendChild(notificationElement);
 
-    // Disable input and button initially
-    answerInput.disabled = true;
-    submitButton.disabled = true;
-
     // Prompt player to enter their name
     function startGame() {
         myName = prompt("Enter your name:");
@@ -74,9 +69,8 @@ function game() {
 
     // Handle WebSocket actions
     socket.actions.updateQuestion = (socket, body) => {
-        const { prompt, isMyTurn: turn, score, opponentScore: oppScore, playerName, opponentName: oppName } = body;
+        const { prompt, score, opponentScore: oppScore, playerName, opponentName: oppName } = body;
 
-        isMyTurn = turn;
         opponentName = oppName;
         myScore = score;
         opponentScore = oppScore;
@@ -85,19 +79,10 @@ function game() {
         scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
         notificationElement.textContent = "";
 
-        // Enable or disable input and button based on turn
-        if (isMyTurn) {
-            answerInput.disabled = false;
-            submitButton.disabled = false;
-
-            // Ensure focus is applied after enabling the input
-            setTimeout(() => {
-                answerInput.focus();
-            }, 0);
-        } else {
-            answerInput.disabled = true;
-            submitButton.disabled = true;
-        }
+        // Remove the disabled attribute from input and button
+        answerInput.removeAttribute("disabled");
+        submitButton.removeAttribute("disabled");
+        answerInput.focus(); // Focus the input field
     };
 
     socket.actions.notification = (socket, body) => {
@@ -120,9 +105,9 @@ function game() {
         scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
         notificationElement.textContent = "Game Over!";
 
-        // Disable input and button
-        answerInput.disabled = true;
-        submitButton.disabled = true;
+        // Disable input and button by adding the attribute back
+        answerInput.setAttribute("disabled", "true");
+        submitButton.setAttribute("disabled", "true");
     };
 
     // Handle submit button click
@@ -139,4 +124,5 @@ function game() {
     });
 }
 
+// Call the game function to start the application
 game();
