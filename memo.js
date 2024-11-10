@@ -15,15 +15,17 @@ const answerInput = document.createElement("input");
 
 body.style.margin = "0";
 body.style.display = "flex";
-body.style.justifyContent = "center";
-body.style.alignItems = "center";
-body.style.height = "100vh";
 body.style.flexDirection = "column";
+body.style.alignItems = "center";
+body.style.justifyContent = "flex-start"; // Align notifications at the top
+body.style.height = "100vh";
 body.style.fontFamily = "Arial, sans-serif";
 body.style.backgroundColor = "#f4f4f4";
 
 questionElement.style.fontSize = "1.5rem";
+questionElement.style.marginTop = "50px";
 scoreElement.style.fontSize = "1.2rem";
+scoreElement.style.margin = "20px 0";
 
 answerInput.type = "text";
 answerInput.placeholder = "Entrez votre réponse...";
@@ -88,12 +90,15 @@ function createNotification(message, type) {
     // Create a temporary notification element
     const notificationElement = document.createElement("p");
     notificationElement.innerHTML = message;
-    notificationElement.style.fontSize = "1.2rem";
+    notificationElement.style.position = "absolute";
+    notificationElement.style.top = "10px";
+    notificationElement.style.left = "50%";
+    notificationElement.style.transform = "translateX(-50%)";
+    notificationElement.style.fontSize = "1.5rem";
     notificationElement.style.fontWeight = "bold";
     notificationElement.style.color = type === "success" ? "green" : "red";
-    notificationElement.style.marginTop = "10px";
-    notificationElement.style.textAlign = "center";
-    notificationElement.style.animation = type === "success" ? "bounce 0.8s ease-in-out" : "shake 0.8s ease-in-out";
+    notificationElement.style.opacity = "1";
+    notificationElement.style.animation = "fadeOutUp 2s ease-in-out";
 
     // Append to the body
     body.appendChild(notificationElement);
@@ -107,17 +112,19 @@ function createNotification(message, type) {
 // Add CSS for animations
 const style = document.createElement("style");
 style.textContent = `
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-    }
-
-    @keyframes shake {
-        0% { transform: translateX(0); }
-        25% { transform: translateX(-5px); }
-        50% { transform: translateX(5px); }
-        75% { transform: translateX(-5px); }
-        100% { transform: translateX(0); }
+    @keyframes fadeOutUp {
+        0% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        50% {
+            opacity: 0.5;
+            transform: translateY(-20px) scale(0.9);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-50px) scale(0.8);
+        }
     }
 `;
 document.head.appendChild(style);
