@@ -10,7 +10,7 @@ function game() {
 
     // Game state
     let myName = "";
-    let opponentName = "";
+    let opponentName = "Adversaire"; // Default opponent name
     let myScore = 0;
     let opponentScore = 0;
 
@@ -60,7 +60,7 @@ function game() {
         // Register the player with the server
         socket.sendAction("register", { name: myName });
         questionElement.textContent = "En attente d'un autre joueur...";
-        scoreElement.textContent = "";
+        scoreElement.textContent = `${myName}: 0 | ${opponentName}: 0`;
         notificationElement.textContent = "";
     }
 
@@ -68,9 +68,9 @@ function game() {
     socket.actions.updateQuestion = (socket, body) => {
         const { prompt, score, opponentScore: oppScore, playerName, opponentName: oppName } = body;
 
-        opponentName = oppName || "Adversaire";
-        myScore = score || 0;
-        opponentScore = oppScore || 0;
+        opponentName = oppName || opponentName;
+        myScore = score !== undefined ? score : myScore;
+        opponentScore = oppScore !== undefined ? oppScore : opponentScore;
 
         questionElement.textContent = prompt;
         scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
@@ -80,8 +80,8 @@ function game() {
     socket.actions.notification = (socket, body) => {
         const { message, score, opponentScore: oppScore } = body;
 
-        myScore = score || 0;
-        opponentScore = oppScore || 0;
+        myScore = score !== undefined ? score : myScore;
+        opponentScore = oppScore !== undefined ? oppScore : opponentScore;
 
         scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
         notificationElement.textContent = message;
@@ -90,8 +90,8 @@ function game() {
     socket.actions.endGame = (socket, body) => {
         const { message, finalScore, opponentScore: oppScore } = body;
 
-        myScore = finalScore || 0;
-        opponentScore = oppScore || 0;
+        myScore = finalScore !== undefined ? finalScore : myScore;
+        opponentScore = oppScore !== undefined ? oppScore : opponentScore;
 
         questionElement.textContent = message;
         scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
