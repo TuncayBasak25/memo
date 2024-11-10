@@ -104,8 +104,7 @@ socket.actions.notification = (socket, body) => {
     const { message, type, correct } = body;
 
     if (type === "opponentSuccess") {
-        createNotification(`${opponentName} a bien répondu !`, "success");
-        createNotification(`${correct.word} est ${correct.index}!`, "success");
+        createNotification(`${opponentName} a bien répondu !\n${correct.word} est ${correct.index}!`, "success");
         answerInput.value = "";
     } else if (type === "opponentFailure") {
         createNotification(`${opponentName} s'est trompé !`, "failure");
@@ -121,10 +120,11 @@ document.addEventListener("keydown", (e) => {
         }
     }
 });
-
+let notificationElement = null;
 function createNotification(message, type) {
     // Create a notification element
-    const notificationElement = document.createElement("p");
+    if (notificationElement) notificationElement.remove();
+    notificationElement = document.createElement("p");
     notificationElement.innerHTML = message;
     notificationElement.style.position = "relative";
     notificationElement.style.fontSize = "clamp(2rem, 4vw, 3rem)";
