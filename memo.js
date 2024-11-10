@@ -1,6 +1,7 @@
 document.body.innerHTML = "";
 
 const carre = document.createElement("div");
+document.body.appendChild(carre)
 const s = carre.style;
 
 s.position = "absolute";
