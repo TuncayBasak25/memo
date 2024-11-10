@@ -99,6 +99,7 @@ function game() {
     };
 
     // Handle keydown events for automatic input and submission
+
 }
 
 // Call the game function to start the application
