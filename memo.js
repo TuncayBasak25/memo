@@ -10,6 +10,7 @@ let opponentScore = 0;
 // Create HTML elements dynamically
 const body = document.body;
 const notificationContainer = document.createElement("div"); // Container for notifications
+const gameContainer = document.createElement("div"); // Main game container
 const questionElement = document.createElement("p");
 const scoreElement = document.createElement("p");
 const answerInput = document.createElement("input");
@@ -22,27 +23,48 @@ body.style.height = "100vh";
 body.style.flexDirection = "column";
 body.style.fontFamily = "Arial, sans-serif";
 body.style.backgroundColor = "#f4f4f4";
+body.style.padding = "10px";
+body.style.boxSizing = "border-box";
+body.style.overflow = "hidden";
 
-// Notification container
+// Notification container styled for absolute positioning
+notificationContainer.style.position = "absolute";
+notificationContainer.style.top = "10px";
 notificationContainer.style.width = "100%";
 notificationContainer.style.textAlign = "center";
-notificationContainer.style.marginBottom = "10px"; // Space between notification and question
+notificationContainer.style.pointerEvents = "none"; // Prevent interaction
+notificationContainer.style.zIndex = "100"; // Ensure it's above everything
 
-questionElement.style.fontSize = "1.5rem";
-questionElement.style.marginTop = "10px"; // Space for a clean layout
-scoreElement.style.fontSize = "1.2rem";
-scoreElement.style.margin = "20px 0";
+// Game container for better responsiveness
+gameContainer.style.display = "flex";
+gameContainer.style.flexDirection = "column";
+gameContainer.style.alignItems = "center";
+gameContainer.style.justifyContent = "center";
+gameContainer.style.width = "100%";
+gameContainer.style.maxWidth = "600px"; // Limit width for larger screens
+gameContainer.style.padding = "20px";
+gameContainer.style.boxSizing = "border-box";
 
+// Text and input styles
+questionElement.style.fontSize = "clamp(1rem, 2vw, 1.5rem)";
+scoreElement.style.fontSize = "clamp(0.8rem, 1.5vw, 1.2rem)";
+scoreElement.style.margin = "10px 0";
 answerInput.type = "text";
 answerInput.placeholder = "Entrez votre réponse...";
-answerInput.style.fontSize = "1.2rem";
+answerInput.style.fontSize = "clamp(0.8rem, 1.5vw, 1.2rem)";
 answerInput.style.margin = "10px";
+answerInput.style.padding = "10px";
+answerInput.style.width = "100%";
+answerInput.style.maxWidth = "400px";
+answerInput.style.boxSizing = "border-box";
+answerInput.style.border = "1px solid #ccc";
+answerInput.style.borderRadius = "5px";
 
-// Append elements to the body
 body.appendChild(notificationContainer);
-body.appendChild(questionElement);
-body.appendChild(scoreElement);
-body.appendChild(answerInput);
+body.appendChild(gameContainer);
+gameContainer.appendChild(questionElement);
+gameContainer.appendChild(scoreElement);
+gameContainer.appendChild(answerInput);
 
 function startGame() {
     myName = prompt("Entrez votre nom :");
@@ -99,7 +121,7 @@ function createNotification(message, type) {
     const notificationElement = document.createElement("p");
     notificationElement.innerHTML = message;
     notificationElement.style.position = "relative";
-    notificationElement.style.fontSize = "1.2rem";
+    notificationElement.style.fontSize = "clamp(0.8rem, 1.5vw, 1.2rem)";
     notificationElement.style.fontWeight = "bold";
     notificationElement.style.color = type === "success" ? "green" : "red";
     notificationElement.style.margin = "5px 0";
@@ -127,6 +149,12 @@ style.textContent = `
         100% {
             opacity: 0;
             transform: translateY(-30px) scale(0.8);
+        }
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding: 20px;
         }
     }
 `;
