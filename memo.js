@@ -1,7 +1,5 @@
 const socket = new Socket("wss://basak-memo-api-8ed79b1768fd.herokuapp.com");
 
-//const socket = new Socket("ws://localhost:8080");
-
 socket.webSocket.addEventListener("open", () => startGame());
 
 let myName = "";
@@ -25,15 +23,13 @@ body.style.flexDirection = "column";
 body.style.fontFamily = "Arial, sans-serif";
 body.style.backgroundColor = "#f4f4f4";
 
-// Notification container styled for absolute positioning
-notificationContainer.style.position = "absolute";
-notificationContainer.style.top = "10px";
+// Notification container
 notificationContainer.style.width = "100%";
 notificationContainer.style.textAlign = "center";
-notificationContainer.style.pointerEvents = "none"; // Prevent interaction
-notificationContainer.style.zIndex = "100"; // Ensure it's above everything
+notificationContainer.style.marginBottom = "10px"; // Space between notification and question
 
 questionElement.style.fontSize = "1.5rem";
+questionElement.style.marginTop = "10px"; // Space for a clean layout
 scoreElement.style.fontSize = "1.2rem";
 scoreElement.style.margin = "20px 0";
 
