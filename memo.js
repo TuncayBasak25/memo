@@ -34,6 +34,8 @@ function loop() {
     setTimeout(() => loop(), 50);
 }
 
+loop();
+
 document.addEventListener("keydown", ({which}) => {
     if (![37, 38, 39, 40].includes(which)) return;
 
