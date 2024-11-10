@@ -99,23 +99,6 @@ function game() {
     };
 
     // Handle keydown events for automatic input and submission
-    document.addEventListener("keydown", (event) => {
-        // Ignore system keys
-        if (event.key === "Enter") {
-            // Submit answer
-            const answer = answerInput.value.trim();
-            if (!answer) {
-                notificationElement.textContent = "Veuillez entrer une réponse.";
-                return;
-            }
-
-            socket.sendAction("submitAnswer", { answer });
-            answerInput.value = "";
-        } else if (event.key.length === 1) {
-            // Write directly into the input
-            answerInput.value += event.key;
-        }
-    });
 }
 
 // Call the game function to start the application
