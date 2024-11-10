@@ -62,23 +62,20 @@ function game() {
         myScore = score;
         scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
 
-        // Add animations based on score changes
         if (myScore > oldScore) {
-            animateSuccess(notificationElement, "Bravo ! Vous avez bien répondu !");
+            animateFeedback(notificationElement, "Bravo ! Vous avez bien répondu !", "success");
         } else if (myScore < oldScore) {
-            animateFailure(notificationElement, "Oups ! Mauvaise réponse !");
+            animateFeedback(notificationElement, "Oups ! Mauvaise réponse !", "failure");
         }
     };
 
     socket.actions.notification = (socket, body) => {
         const { message, type } = body;
-        notificationElement.textContent = message;
 
-        // Opponent animations
         if (type === "opponentSuccess") {
-            animateSuccess(notificationElement, `${opponentName} a bien répondu !`);
+            animateFeedback(notificationElement, `${opponentName} a bien répondu !`, "success");
         } else if (type === "opponentFailure") {
-            animateFailure(notificationElement, `${opponentName} s'est trompé !`);
+            animateFeedback(notificationElement, `${opponentName} s'est trompé !`, "failure");
         }
     };
 
@@ -92,26 +89,23 @@ function game() {
         }
     });
 
-    function animateSuccess(element, message) {
+    function animateFeedback(element, message, type) {
         element.textContent = message;
-        element.style.color = "green";
+        element.style.color = type === "success" ? "green" : "red";
         element.style.fontWeight = "bold";
-        element.style.animation = "bounce 0.5s ease-in-out";
-        resetAnimation(element);
-    }
 
-    function animateFailure(element, message) {
-        element.textContent = message;
-        element.style.color = "red";
-        element.style.fontWeight = "bold";
-        element.style.animation = "shake 0.5s ease-in-out";
-        resetAnimation(element);
-    }
+        // Apply animations
+        if (type === "success") {
+            element.style.animation = "bounce 0.8s ease-in-out";
+        } else if (type === "failure") {
+            element.style.animation = "shake 0.8s ease-in-out";
+        }
 
-    function resetAnimation(element) {
+        // Reset animation after it finishes
         setTimeout(() => {
             element.style.animation = "";
-        }, 500);
+            element.textContent = ""; // Clear message after 2 seconds
+        }, 2000);
     }
 }
 
