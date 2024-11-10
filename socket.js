@@ -34,8 +34,6 @@ class Socket {
             }
         }
         if (set && (typeof set.key == "string" || typeof set.key == "number")) {
-            console.log(set);
-            
             this.data.set(set.key, set.value);
         }
     }
