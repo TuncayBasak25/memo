@@ -89,7 +89,11 @@ function game() {
         if (isMyTurn) {
             answerInput.disabled = false;
             submitButton.disabled = false;
-            answerInput.focus(); // Explicitly set focus to the input
+
+            // Ensure focus is applied after enabling the input
+            setTimeout(() => {
+                answerInput.focus();
+            }, 0);
         } else {
             answerInput.disabled = true;
             submitButton.disabled = true;
@@ -134,3 +138,5 @@ function game() {
         answerInput.value = "";
     });
 }
+
+game();
