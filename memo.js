@@ -12,7 +12,6 @@ const body = document.body;
 const questionElement = document.createElement("p");
 const scoreElement = document.createElement("p");
 const answerInput = document.createElement("input");
-const notificationElement = document.createElement("p");
 
 body.style.margin = "0";
 body.style.display = "flex";
@@ -25,11 +24,6 @@ body.style.backgroundColor = "#f4f4f4";
 
 questionElement.style.fontSize = "1.5rem";
 scoreElement.style.fontSize = "1.2rem";
-notificationElement.style.fontSize = "1.2rem";
-notificationElement.style.marginTop = "10px";
-notificationElement.style.textAlign = "center";
-notificationElement.style.transition = "opacity 0.3s ease"; // Smooth fade-in/out
-notificationElement.style.opacity = "1"; // Ensure it's visible
 
 answerInput.type = "text";
 answerInput.placeholder = "Entrez votre réponse...";
@@ -39,7 +33,6 @@ answerInput.style.margin = "10px";
 body.appendChild(questionElement);
 body.appendChild(scoreElement);
 body.appendChild(answerInput);
-body.appendChild(notificationElement);
 
 function startGame() {
     myName = prompt("Entrez votre nom :");
@@ -55,7 +48,6 @@ socket.actions.updateQuestion = (socket, body) => {
 
     questionElement.innerHTML = prompt;
     scoreElement.innerHTML = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
-    notificationElement.innerHTML = "";
     answerInput.focus();
 };
 
@@ -66,9 +58,9 @@ socket.actions.updateScore = (socket, body) => {
     scoreElement.innerHTML = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
 
     if (myScore > oldScore) {
-        animateFeedback(notificationElement, "Bravo ! Vous avez bien répondu !", "success");
+        createNotification("Bravo ! Vous avez bien répondu !", "success");
     } else if (myScore < oldScore) {
-        animateFeedback(notificationElement, "Oups ! Mauvaise réponse !", "failure");
+        createNotification("Oups ! Mauvaise réponse !", "failure");
     }
 };
 
@@ -76,9 +68,9 @@ socket.actions.notification = (socket, body) => {
     const { message, type } = body;
 
     if (type === "opponentSuccess") {
-        animateFeedback(notificationElement, `${opponentName} a bien répondu !`, "success");
+        createNotification(`${opponentName} a bien répondu !`, "success");
     } else if (type === "opponentFailure") {
-        animateFeedback(notificationElement, `${opponentName} s'est trompé !`, "failure");
+        createNotification(`${opponentName} s'est trompé !`, "failure");
     }
 };
 
@@ -92,26 +84,23 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-function animateFeedback(element, message, type) {
-    console.log("Animating feedback:", message, type); // Debug message
+function createNotification(message, type) {
+    // Create a temporary notification element
+    const notificationElement = document.createElement("p");
+    notificationElement.innerHTML = message;
+    notificationElement.style.fontSize = "1.2rem";
+    notificationElement.style.fontWeight = "bold";
+    notificationElement.style.color = type === "success" ? "green" : "red";
+    notificationElement.style.marginTop = "10px";
+    notificationElement.style.textAlign = "center";
+    notificationElement.style.animation = type === "success" ? "bounce 0.8s ease-in-out" : "shake 0.8s ease-in-out";
 
-    // Ensure element is visible before updating
-    element.style.opacity = "1";
-    element.innerHTML = message; // Use `innerHTML` to ensure content is displayed
-    element.style.color = type === "success" ? "green" : "red";
-    element.style.fontWeight = "bold";
+    // Append to the body
+    body.appendChild(notificationElement);
 
-    // Apply animations
-    if (type === "success") {
-        element.style.animation = "bounce 0.8s ease-in-out";
-    } else if (type === "failure") {
-        element.style.animation = "shake 0.8s ease-in-out";
-    }
-
-    // Reset animation and fade out message
+    // Remove the notification after the animation ends
     setTimeout(() => {
-        element.style.animation = "";
-        element.style.opacity = "0"; // Fade out smoothly
+        notificationElement.remove();
     }, 2000);
 }
 
