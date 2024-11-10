@@ -10,7 +10,7 @@ s.width = "200px";
 s.height = "200px";
 
 //const socket = new Socket("ws://localhost:8080");
-const socket = new Socket("ws://localhost:8080");
+const socket = new Socket("wss://basak-memo-api-8ed79b1768fd.herokuapp.com");
 
 let x = 0;
 let y = 0;
