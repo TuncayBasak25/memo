@@ -26,6 +26,10 @@ body.style.backgroundColor = "#f4f4f4";
 questionElement.style.fontSize = "1.5rem";
 scoreElement.style.fontSize = "1.2rem";
 notificationElement.style.fontSize = "1.2rem";
+notificationElement.style.marginTop = "10px";
+notificationElement.style.textAlign = "center";
+notificationElement.style.transition = "opacity 0.3s ease"; // Smooth fade-in/out
+notificationElement.style.opacity = "1"; // Ensure it's visible
 
 answerInput.type = "text";
 answerInput.placeholder = "Entrez votre réponse...";
@@ -40,7 +44,7 @@ body.appendChild(notificationElement);
 function startGame() {
     myName = prompt("Entrez votre nom :");
     socket.sendAction("register", { name: myName });
-    questionElement.textContent = "En attente d'un autre joueur...";
+    questionElement.innerHTML = "En attente d'un autre joueur...";
 }
 
 socket.actions.updateQuestion = (socket, body) => {
@@ -49,9 +53,9 @@ socket.actions.updateQuestion = (socket, body) => {
     myScore = score;
     opponentScore = oppScore;
 
-    questionElement.textContent = prompt;
-    scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
-    notificationElement.textContent = "";
+    questionElement.innerHTML = prompt;
+    scoreElement.innerHTML = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
+    notificationElement.innerHTML = "";
     answerInput.focus();
 };
 
@@ -59,7 +63,7 @@ socket.actions.updateScore = (socket, body) => {
     const { score } = body;
     const oldScore = myScore;
     myScore = score;
-    scoreElement.textContent = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
+    scoreElement.innerHTML = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
 
     if (myScore > oldScore) {
         animateFeedback(notificationElement, "Bravo ! Vous avez bien répondu !", "success");
@@ -89,7 +93,11 @@ document.addEventListener("keydown", (e) => {
 });
 
 function animateFeedback(element, message, type) {
-    element.textContent = message;
+    console.log("Animating feedback:", message, type); // Debug message
+
+    // Ensure element is visible before updating
+    element.style.opacity = "1";
+    element.innerHTML = message; // Use `innerHTML` to ensure content is displayed
     element.style.color = type === "success" ? "green" : "red";
     element.style.fontWeight = "bold";
 
@@ -100,10 +108,10 @@ function animateFeedback(element, message, type) {
         element.style.animation = "shake 0.8s ease-in-out";
     }
 
-    // Reset animation after it finishes
+    // Reset animation and fade out message
     setTimeout(() => {
         element.style.animation = "";
-        element.textContent = ""; // Clear message after 2 seconds
+        element.style.opacity = "0"; // Fade out smoothly
     }, 2000);
 }
 
