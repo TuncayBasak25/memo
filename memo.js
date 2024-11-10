@@ -106,6 +106,8 @@ socket.actions.notification = (socket, body) => {
     if (type === "opponentSuccess") {
         createNotification(`${opponentName} a bien répondu !\n${correct.word} est ${correct.index}!`, "success");
         answerInput.value = "";
+        answerInput.disabled = true;
+        setTimeout(() => answerInput.removeAttribute("disabled"), 500);
     } else if (type === "opponentFailure") {
         createNotification(`${opponentName} s'est trompé !`, "failure");
     }
