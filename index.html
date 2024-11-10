@@ -57,10 +57,11 @@
         let isMyTurn = false;
 
         socket.actions.updateGame = (socket, body) => {
-            const { question, score, opponentScore, turn } = body;
-            isMyTurn = body.turn % 2 === 0; // Update turn
+            const { question, isMyTurn: turn, score, opponentScore } = body;
+            isMyTurn = turn;
             document.getElementById("question").textContent = question;
             document.getElementById("score").textContent = `Score: ${score} | Opponent: ${opponentScore}`;
+            document.getElementById("answerInput").style.display = isMyTurn ? "block" : "none";
         };
 
         socket.actions.endGame = (socket, body) => {
