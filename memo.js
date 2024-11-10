@@ -140,7 +140,7 @@ function createNotification(message, type) {
     // Remove the notification after animation ends
     setTimeout(() => {
         notificationElement.remove();
-    }, 2000);
+    }, 4000);
 }
 
 // Add CSS for animations
