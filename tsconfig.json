@@ -1,17 +1,12 @@
 {
     "compilerOptions": {
-        "target": "es2016",
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "resolveJsonModule": true,
-        "allowJs": false,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
+        "target": "ES2017",
+        "module": "none",
         "strict": true,
         "noImplicitAny": true,
-        "allowSyntheticDefaultImports": true
+        "outFile": "memo.js"
     },
 
-    "include": ["./ts"],
+    "include": ["./src", "./dep"],
     "exclude": []
 }

@@ -1,201 +1,74 @@
-const socket = new Socket("wss://basak-memo-api-8ed79b1768fd.herokuapp.com");
-
-
-socket.webSocket.addEventListener("open", () => startGame());
-
-let myName = "";
-let opponentName = "";
-let myScore = 0;
-let opponentScore = 0;
-
-// Create HTML elements dynamically
-const body = document.body;
-const notificationContainer = document.createElement("div"); // Container for notifications
-const gameContainer = document.createElement("div"); // Main game container
-const questionElement = document.createElement("p");
-const scoreElement = document.createElement("p");
-const answerInput = document.createElement("input");
-
-body.style.margin = "0";
-body.style.display = "flex";
-body.style.justifyContent = "center";
-body.style.alignItems = "center";
-body.style.height = "100vh";
-body.style.flexDirection = "column";
-body.style.fontFamily = "Arial, sans-serif";
-body.style.backgroundColor = "#f4f4f4";
-body.style.padding = "10px";
-body.style.boxSizing = "border-box";
-body.style.overflow = "hidden";
-
-// Notification container styled for centering between question and top
-notificationContainer.style.position = "absolute";
-notificationContainer.style.top = "15%"; // Place it closer to the top but above the question
-notificationContainer.style.left = "50%";
-notificationContainer.style.transform = "translateX(-50%)";
-notificationContainer.style.width = "100%";
-notificationContainer.style.textAlign = "center";
-notificationContainer.style.pointerEvents = "none"; // Prevent interaction
-notificationContainer.style.zIndex = "100"; // Ensure it's above everything
-
-// Game container for better responsiveness
-gameContainer.style.display = "flex";
-gameContainer.style.flexDirection = "column";
-gameContainer.style.alignItems = "center";
-gameContainer.style.justifyContent = "center";
-gameContainer.style.width = "100%";
-gameContainer.style.maxWidth = "600px"; // Limit width for larger screens
-gameContainer.style.padding = "20px";
-gameContainer.style.boxSizing = "border-box";
-
-// Text and input styles
-questionElement.style.fontSize = "clamp(1rem, 2vw, 1.5rem)";
-scoreElement.style.fontSize = "clamp(0.8rem, 1.5vw, 1.2rem)";
-scoreElement.style.margin = "10px 0";
-answerInput.type = "text";
-answerInput.placeholder = "Entrez votre réponse...";
-answerInput.style.fontSize = "clamp(0.8rem, 1.5vw, 1.2rem)";
-answerInput.style.margin = "10px";
-answerInput.style.padding = "10px";
-answerInput.style.width = "100%";
-answerInput.style.maxWidth = "400px";
-answerInput.style.boxSizing = "border-box";
-answerInput.style.border = "1px solid #ccc";
-answerInput.style.borderRadius = "5px";
-
-// Append elements to the body
-body.appendChild(notificationContainer);
-body.appendChild(gameContainer);
-gameContainer.appendChild(questionElement);
-gameContainer.appendChild(scoreElement);
-gameContainer.appendChild(answerInput);
-
-function startGame() {
-    myName = prompt("Entrez votre nom :");
-    socket.sendAction("register", { name: myName });
-    questionElement.innerHTML = "En attente d'un autre joueur...";
-}
-
-socket.actions.updateQuestion = (socket, body) => {
-    const { prompt, opponentName: oppName, score, opponentScore: oppScore } = body;
-    opponentName = oppName || "Adversaire";
-    myScore = score;
-    opponentScore = oppScore;
-
-    questionElement.innerHTML = prompt;
-    scoreElement.innerHTML = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
-    answerInput.focus();
-};
-
-socket.actions.updateScore = (socket, body) => {
-    const { score } = body;
-    const oldScore = myScore;
-    myScore = score;
-    scoreElement.innerHTML = `${myName}: ${myScore} | ${opponentName}: ${opponentScore}`;
-
-    if (myScore > oldScore) {
-        createNotification("Bravo ! Vous avez bien répondu !", "success");
-    } else if (myScore < oldScore) {
-        createNotification("Oups ! Mauvaise réponse !", "failure");
+"use strict";
+var Interceptor;
+(function (Interceptor) {
+    function setupInterceptor(entity, propertyName) {
+        const metaData = MetaData.get(entity, propertyName, { value: entity[propertyName], limiters: [], watchers: [] });
+        let mutex = false; //Check if there is already a mutation to prevent cycle call to set propertyname, we will throw an error to constrain good practice of not trying to set a property inside its set interceptor
+        Object.defineProperty(entity, propertyName, {
+            get: function () {
+                return metaData.value;
+            },
+            set: function (newValue) {
+                if (mutex)
+                    throw new Error("You are trying to mutate the property inside the property set interceptor! Return your value in the limiter function if you want to mutate!");
+                if (newValue == metaData.value) //No change no trigger
+                    return;
+                mutex = true; //From there something like entity.gold += 5 will trigger runtime error with an error message, maybe we can build a more complete logging system
+                //In the futur we will manage to get rid of those checks with static analysis
+                for (const limiter of metaData.limiters) {
+                    newValue = limiter(newValue);
+                    if (newValue == metaData.value) { //One of limiters has constrained the value to stay the same, so no change
+                        mutex = false;
+                        return;
+                    }
+                }
+                //To be here means the value has effectively changed
+                for (const watcher of metaData.watchers)
+                    watcher(newValue); //To handle a function call with the new value, the entity.value is still unchanged so the user can compare it if he wish
+                metaData.value = newValue; //Finally we set the value of the property
+                mutex = false; //The value can be reset if wished, this pervents calling set value inside set value by throwing runtime error, but technically we could get rid of it at distribution as the code will not change in distribution
+            }
+        });
+        return metaData; //We return the metaData so the registerers can use it as they wish
     }
-};
-
-socket.actions.notification = (socket, body) => {
-    const { message, type, correct } = body;
-
-    if (type === "opponentSuccess") {
-        createNotification(`${opponentName} a bien répondu !\n${correct.word} est ${correct.index}!`, "success");
-        answerInput.value = "";
-        answerInput.disabled = true;
-        setTimeout(() => answerInput.removeAttribute("disabled") || answerInput.focus(), 500);
-    } else if (type === "opponentFailure") {
-        createNotification(`${opponentName} s'est trompé !`, "failure");
+    function limitProperty(entity, propertyName, limiter) {
+        const metaData = setupInterceptor(entity, propertyName);
+        metaData.limiters.push(limiter);
+        return () => metaData.limiters = metaData.limiters.filter(el => el != limiter); //Cleaner if needed
     }
-};
-
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        const answer = answerInput.value.trim();
-        if (answer) {
-            socket.sendAction("submitAnswer", { answer });
-            answerInput.value = "";
+    Interceptor.limitProperty = limitProperty;
+    function watchProperty(entity, propertyName, watcher) {
+        const metaData = setupInterceptor(entity, propertyName);
+        metaData.watchers.push(watcher);
+        return () => metaData.watchers = metaData.watchers.filter(el => el != watcher);
+    }
+    Interceptor.watchProperty = watchProperty;
+})(Interceptor || (Interceptor = {}));
+setTimeout(() => {
+    class Vec {
+        constructor() {
+            this.x = 0;
+            this.y = 0;
+            this.name = "";
         }
     }
-});
-let notificationElement = null;
-function createNotification(message, type) {
-    // Create a notification element
-    if (notificationElement) notificationElement.remove();
-    notificationElement = document.createElement("p");
-    notificationElement.innerHTML = message;
-    notificationElement.style.position = "relative";
-    notificationElement.style.fontSize = "clamp(2rem, 4vw, 3rem)";
-    notificationElement.style.fontWeight = "bold";
-    notificationElement.style.color = type === "success" ? "green" : "red";
-    notificationElement.style.margin = "10px 0";
-    notificationElement.style.opacity = "1";
-    notificationElement.style.transform = "translateY(0)";
-    notificationElement.style.animation = "moveUp 4s ease-in-out forwards";
-
-    // Append to the notification container
-    notificationContainer.appendChild(notificationElement);
-
-    // Remove the notification after animation ends
-    setTimeout(() => {
-        notificationElement.remove();
-    }, 4000);
-}
-
-// Add CSS for animations
-const style = document.createElement("style");
-style.textContent = `
-    @keyframes moveUp {
-        0% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
+    const vec = new Vec();
+    Interceptor.watchProperty(vec, "x", (newValue) => console.log("Vec x is about to change to " + newValue));
+    vec.x++;
+}, 0);
+var MetaData;
+(function (MetaData) {
+    const register = new WeakMap();
+    function get(entity, name, initialValue) {
+        let data = register.get(entity);
+        if (!data) {
+            data = {};
+            register.set(entity, data);
         }
-        100% {
-            opacity: 0;
-            transform: translateY(-30px) scale(0.8);
+        if (!(name in data)) {
+            data[name] = initialValue;
         }
+        return data[name];
     }
-
-    @media (max-width: 768px) {
-        body {
-            padding: 20px;
-        }
-    }
-`;
-
-style.textContent += `
-    .notification-container {
-        position: absolute;
-        top: 15%; /* Default: Centered between the question and top */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        text-align: center;
-        pointer-events: none;
-        z-index: 100;
-    }
-
-    @media (max-width: 768px) {
-        .notification-container {
-            top: auto; /* Reset top */
-            bottom: 10px; /* Positioned below the input field */
-            transform: translate(-50%, 0); /* No vertical adjustment */
-        }
-    }
-
-    @keyframes moveUp {
-        0% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-        100% {
-            opacity: 0;
-            transform: translateY(-30px) scale(0.8);
-        }
-    }
-`;
-document.head.appendChild(style);
+    MetaData.get = get;
+})(MetaData || (MetaData = {}));
