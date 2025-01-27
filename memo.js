@@ -1,74 +1,222 @@
 "use strict";
-var Interceptor;
-(function (Interceptor) {
-    function setupInterceptor(entity, propertyName) {
-        const metaData = MetaData.get(entity, propertyName, { value: entity[propertyName], limiters: [], watchers: [] });
-        let mutex = false; //Check if there is already a mutation to prevent cycle call to set propertyname, we will throw an error to constrain good practice of not trying to set a property inside its set interceptor
-        Object.defineProperty(entity, propertyName, {
-            get: function () {
-                return metaData.value;
-            },
-            set: function (newValue) {
-                if (mutex)
-                    throw new Error("You are trying to mutate the property inside the property set interceptor! Return your value in the limiter function if you want to mutate!");
-                if (newValue == metaData.value) //No change no trigger
-                    return;
-                mutex = true; //From there something like entity.gold += 5 will trigger runtime error with an error message, maybe we can build a more complete logging system
-                //In the futur we will manage to get rid of those checks with static analysis
-                for (const limiter of metaData.limiters) {
-                    newValue = limiter(newValue);
-                    if (newValue == metaData.value) { //One of limiters has constrained the value to stay the same, so no change
-                        mutex = false;
-                        return;
-                    }
-                }
-                //To be here means the value has effectively changed
-                for (const watcher of metaData.watchers)
-                    watcher(newValue); //To handle a function call with the new value, the entity.value is still unchanged so the user can compare it if he wish
-                metaData.value = newValue; //Finally we set the value of the property
-                mutex = false; //The value can be reset if wished, this pervents calling set value inside set value by throwing runtime error, but technically we could get rid of it at distribution as the code will not change in distribution
-            }
+var Main;
+(function (Main) {
+    on_init(() => {
+        const image = new Image(innerWidth / 8, innerWidth / 8);
+        image.src = "images/cat.webp";
+        image.style.position = "absolute";
+        image.style.borderRadius = "500px";
+        image.style.left = (innerWidth - image.width) / 2 + "px";
+        image.style.top = (innerHeight - image.height) / 2 + "px";
+        document.body.appendChild(image);
+        window.onresize = () => {
+            image.width = innerWidth / 8;
+            image.height = innerWidth / 8;
+            image.style.left = (innerWidth - image.width) / 2 + "px";
+            image.style.top = (innerHeight - image.height) / 2 + "px";
+        };
+        let angle = 0;
+        on_update(() => {
+            angle += Main.deltaT / 1000;
+            image.style.transform = `rotate(${angle}rad)`;
         });
-        return metaData; //We return the metaData so the registerers can use it as they wish
+    });
+})(Main || (Main = {}));
+var inits;
+var updates;
+var resets;
+function on_init(init) {
+    inits !== null && inits !== void 0 ? inits : (inits = []);
+    inits.push(init);
+}
+function on_update(update) {
+    updates !== null && updates !== void 0 ? updates : (updates = []);
+    updates.push(update);
+}
+function on_reset(reset) {
+    resets !== null && resets !== void 0 ? resets : (resets = []);
+    resets.push(reset);
+}
+var Main;
+(function (Main) {
+    inits !== null && inits !== void 0 ? inits : (inits = []);
+    updates !== null && updates !== void 0 ? updates : (updates = []);
+    resets !== null && resets !== void 0 ? resets : (resets = []);
+    Main.running = true;
+    let is_reset = false;
+    Main.reset = () => is_reset = true;
+    Main.deltaT = 0;
+    let start = 0;
+    function main() {
+        for (const init of inits)
+            init();
+        loop();
     }
-    function limitProperty(entity, propertyName, limiter) {
-        const metaData = setupInterceptor(entity, propertyName);
-        metaData.limiters.push(limiter);
-        return () => metaData.limiters = metaData.limiters.filter(el => el != limiter); //Cleaner if needed
+    function loop() {
+        if (is_reset) {
+            for (const reset of resets)
+                reset();
+            is_reset = false;
+        }
+        const end = Date.now();
+        Main.deltaT = start == 0 ? 0 : end - start;
+        start = end;
+        for (const update of updates)
+            update();
+        requestAnimationFrame(loop);
     }
-    Interceptor.limitProperty = limitProperty;
-    function watchProperty(entity, propertyName, watcher) {
-        const metaData = setupInterceptor(entity, propertyName);
-        metaData.watchers.push(watcher);
-        return () => metaData.watchers = metaData.watchers.filter(el => el != watcher);
+    window.onload = main;
+})(Main || (Main = {}));
+var Main;
+(function (Main) {
+    function V2(x, y) {
+        return new Vec2(x, y);
     }
-    Interceptor.watchProperty = watchProperty;
-})(Interceptor || (Interceptor = {}));
-setTimeout(() => {
-    class Vec {
-        constructor() {
-            this.x = 0;
-            this.y = 0;
-            this.name = "";
+    Main.V2 = V2;
+    class Vec2 {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+        get dir() {
+            return Math.atan2(this.y, this.x);
+        }
+        set dir(angle) {
+            const mag = this.mag;
+            this.x = Math.cos(angle) * mag;
+            this.y = Math.sin(angle) * mag;
+        }
+        get magSquare() {
+            return this.x ** 2 + this.y ** 2;
+        }
+        get mag() {
+            return Math.sqrt(this.magSquare);
+        }
+        set mag(val) {
+            if (val == 0)
+                this.set(0, 0);
+            else
+                this.scale_mut(this.mag / val);
+        }
+        is_null() {
+            return this.x == 0 && this.y == 0;
+        }
+        is_near_null(tolerance) {
+            return this.mag < tolerance;
+        }
+        is_equal(other) {
+            return this.x == other.x && this.y == other.y;
+        }
+        is_near(other, tolerance) {
+            return other.sub(this).mag < tolerance;
+        }
+        copy() {
+            return V2(this.x, this.y);
+        }
+        normalize() {
+            return this.copy().normalize_mut();
+        }
+        normalize_mut() {
+            const { dir } = this;
+            return this.set(Math.cos(dir), Math.sin(dir));
+        }
+        set(x, y) {
+            this.x = x;
+            this.y = y;
+            return this;
+        }
+        dot(other) {
+            return this.x * other.x + this.y * other.y;
+        }
+        cross(other) {
+            return this.x * other.y - this.y * other.x;
+        }
+        add(...rhsList) {
+            let { x, y } = this;
+            for (const rhs of rhsList) {
+                x += rhs.x;
+                y += rhs.y;
+            }
+            return V2(x, y);
+        }
+        add_mut(...rhsList) {
+            for (const rhs of rhsList) {
+                this.x += rhs.x;
+                this.y += rhs.y;
+            }
+            return this;
+        }
+        sub(...rhsList) {
+            let { x, y } = this;
+            for (const rhs of rhsList) {
+                x -= rhs.x;
+                y -= rhs.y;
+            }
+            return V2(x, y);
+        }
+        sub_mut(...rhsList) {
+            for (const rhs of rhsList) {
+                this.x -= rhs.x;
+                this.y -= rhs.y;
+            }
+            return this;
+        }
+        scale(val) {
+            return V2(this.x * val, this.y * val);
+        }
+        scale_mut(val) {
+            this.x *= val;
+            this.y *= val;
+            return this;
+        }
+        rotate(angle) {
+            return this.copy().rotate_mut(angle);
+        }
+        rotate_mut(angle) {
+            this.dir += angle;
+            return this;
+        }
+        point_towards(target) {
+            return this.copy().point_towards_mut(target);
+        }
+        point_towards_mut(target) {
+            if (this.is_equal(target))
+                return this;
+            this.dir = target.sub(this).dir;
+            return this;
         }
     }
-    const vec = new Vec();
-    Interceptor.watchProperty(vec, "x", (newValue) => console.log("Vec x is about to change to " + newValue));
-    vec.x++;
-}, 0);
-var MetaData;
-(function (MetaData) {
-    const register = new WeakMap();
-    function get(entity, name, initialValue) {
-        let data = register.get(entity);
-        if (!data) {
-            data = {};
-            register.set(entity, data);
-        }
-        if (!(name in data)) {
-            data[name] = initialValue;
-        }
-        return data[name];
-    }
-    MetaData.get = get;
-})(MetaData || (MetaData = {}));
+})(Main || (Main = {}));
+const wordVisuals = [
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+    "./images/cat.webp",
+];
